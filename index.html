@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Crystal Surface Dangling Bonds</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--D:#0B2545;--A:#1B5FAD;--P:#C8DFF2;--B:#EEF5FB;--M:#7AAFD4;--G:#40B870;--R:#E05050;--O:#E09030;--Y:#F0C040;
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*,*::before,*::after{box-sizing:inherit;margin:0;padding:0}
+html,body{height:100%;font-family:'Inter',system-ui,sans-serif;background:var(--D);color:var(--B);overflow:hidden}
+#app{display:flex;flex-direction:column;height:100%}
+#hdr{padding:10px 16px;border-bottom:1px solid #1a3a60;flex-shrink:0;display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:space-between}
+#hdr h1{font-size:15px;font-weight:600;white-space:nowrap}
+#ctrls{display:flex;gap:6px;flex-wrap:wrap}
+.bg{display:flex;border-radius:8px;overflow:hidden;border:1px solid #1B3A60}
+.btn{background:transparent;color:var(--M);border:none;padding:6px 13px;font-size:12px;font-weight:500;cursor:pointer;transition:background .15s,color .15s;font-family:inherit;white-space:nowrap}
+.btn:hover{background:#132E54;color:var(--B)}
+.btn.on{background:var(--A);color:#fff}
+#main{display:flex;flex:1;min-height:0}
+#cw{flex:1;position:relative;min-width:0}
+#c{display:block;width:100%;height:100%}
+
+/* ── Preview card ── */
+#pvCard{position:absolute;top:12px;left:12px;width:170px;background:#07182D;border:1px solid #2A5080;border-radius:12px;overflow:hidden;z-index:10;box-shadow:0 4px 20px rgba(0,0,0,.5)}
+#pvTitle{padding:8px 12px 4px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:#4A6B8A}
+#pvC{display:block;width:162px;height:162px;margin:0 auto}
+#pvLabel{padding:6px 12px 8px;border-top:1px solid #1B3A60;display:flex;align-items:center;justify-content:center;gap:6px}
+#pvCrystal{font-size:13px;font-weight:600;color:var(--P)}
+#pvPlane{font-size:13px;font-weight:600}
+
+.ov{position:absolute;pointer-events:none;font-size:11px;color:var(--M);background:rgba(11,37,69,.85);padding:3px 10px;border-radius:12px}
+#ov1{top:10px;left:50%;transform:translateX(-50%)}
+#ov2{bottom:10px;left:50%;transform:translateX(-50%)}
+#ov3{top:10px;right:10px;opacity:.5;font-size:10px}
+
+/* ── Side panel ── */
+#pnl{width:246px;min-width:246px;background:#0D2D4F;border-left:1px solid #1a3a60;padding:12px;display:flex;flex-direction:column;gap:9px;overflow-y:auto;flex-shrink:0}
+.plab{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:#4A6B8A;margin-bottom:2px}
+.card{background:#132E54;border-radius:8px;padding:11px 13px}
+#fc{background:#0E2644;border:1px solid #1B3A60;border-radius:8px;padding:12px 13px}
+.fml{font-size:11px;color:#4A6B8A;margin-bottom:8px;line-height:1.5}
+.feq{display:flex;align-items:baseline;justify-content:center;gap:5px;font-size:22px;font-weight:600;margin-bottom:4px}
+.feq .op{font-size:15px;color:#4A6B8A;font-weight:400}
+.flbl{display:flex;justify-content:space-around;font-size:9px;color:#4A6B8A;padding:0 8px}
+.fdiv{border-top:1px solid #1B3A60;margin:8px 0}
+.brow{display:flex;align-items:center;gap:9px;padding:5px 0}
+.brow:not(:last-child){border-bottom:1px solid #1a3a60}
+.bsw{width:12px;height:12px;border-radius:3px;flex-shrink:0}
+.blab{flex:1;font-size:12px;color:var(--M)}
+.blab small{font-size:10px;display:block;color:#4A6B8A;margin-top:1px}
+.bnum{font-size:22px;font-weight:600;min-width:28px;text-align:right}
+#desc{font-size:12px;color:var(--M);line-height:1.65;background:#132E54;border-radius:8px;padding:11px 13px}
+#tw{background:#132E54;border-radius:8px;padding:9px;flex-shrink:0}
+#tt{width:100%;border-collapse:collapse;font-size:11px}
+#tt th,#tt td{padding:5px 7px;text-align:center}
+#tt th{color:#4A6B8A;font-weight:500;font-size:10px}
+#tt td.rl{text-align:left;color:var(--M);font-weight:500}
+#tt td.rv{color:var(--P);font-weight:500;border-radius:4px}
+#tt td.hi{background:var(--A);color:#fff;font-weight:600}
+#leg{padding:8px 16px;border-top:1px solid #1a3a60;display:flex;gap:10px;flex-wrap:wrap;flex-shrink:0;align-items:center}
+.li{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--M)}
+.ld{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.lb{width:16px;height:4px;border-radius:2px;flex-shrink:0}
+@media(max-width:700px){#pnl{display:none}}
+</style>
+</head>
+<body>
+<div id="app">
+<header id="hdr">
+  <h1>Crystal surface — dangling bonds</h1>
+  <div id="ctrls">
+    <div class="bg" id="cbg">
+      <button class="btn on" data-c="SC">SC</button>
+      <button class="btn" data-c="FCC">FCC</button>
+      <button class="btn" data-c="BCC">BCC</button>
+    </div>
+    <div class="bg" id="sbg">
+      <button class="btn on" data-s="100">(100)</button>
+      <button class="btn" data-s="110">(110)</button>
+      <button class="btn" data-s="111">(111)</button>
+    </div>
+  </div>
+</header>
+<div id="main">
+  <div id="cw">
+    <canvas id="c"></canvas>
+
+    <!-- Unit cell preview, top-left -->
+    <div id="pvCard">
+      <div id="pvTitle">unit cell</div>
+      <canvas id="pvC"></canvas>
+      <div id="pvLabel">
+        <span id="pvCrystal">SC</span>
+        <span style="color:#4A6B8A">·</span>
+        <span id="pvPlane" style="color:#3A8FE0">(100)</span>
+      </div>
+    </div>
+
+    <div class="ov" id="ov1">&#9650; vacuum</div>
+    <div class="ov" id="ov2">&#9660; bulk</div>
+    <div class="ov" id="ov3">drag · scroll to zoom</div>
+  </div>
+
+  <div id="pnl">
+    <div class="plab">surface</div>
+    <div class="card" style="display:flex;justify-content:space-between;align-items:baseline">
+      <span id="pn" style="font-size:13px;font-weight:600"></span>
+      <span id="ps" style="font-size:13px;color:var(--M)"></span>
+    </div>
+
+    <div class="plab">dangling bond formula</div>
+    <div id="fc">
+      <div class="fml">Locate the <span style="color:var(--O);font-weight:500">in-plane nearest neighbors</span> — bonds lying entirely within the (hkl) surface plane:</div>
+      <div style="font-size:11px;color:#4A6B8A;text-align:center;margin-bottom:6px;letter-spacing:.3px">dangling = (coordination − in-plane) ÷ 2</div>
+      <div class="fdiv"></div>
+      <div class="feq">
+        <span class="op">(</span><span style="color:var(--P)" id="f-cn">8</span>
+        <span class="op">−</span><span style="color:var(--O)" id="f-ip">4</span>
+        <span class="op">) ÷ 2 =</span><span style="color:var(--R)" id="f-d">2</span>
+      </div>
+      <div class="flbl"><span>coord.</span><span>in-plane</span><span>dangling</span></div>
+    </div>
+
+    <div class="plab">bond breakdown</div>
+    <div class="card">
+      <div class="brow">
+        <div class="bsw" style="background:var(--O)"></div>
+        <div class="blab">In-plane bonds<small>within (hkl) plane — not cut</small></div>
+        <div class="bnum" style="color:var(--O)" id="b-ip">4</div>
+      </div>
+      <div class="brow">
+        <div class="bsw" style="background:var(--G)"></div>
+        <div class="blab">Satisfied bonds<small>into bulk below surface</small></div>
+        <div class="bnum" style="color:var(--G)" id="b-sb">2</div>
+      </div>
+      <div class="brow">
+        <div class="bsw" style="background:var(--R)"></div>
+        <div class="blab">Dangling bonds<small>into vacuum — no neighbor</small></div>
+        <div class="bnum" style="color:var(--R)" id="b-d">2</div>
+      </div>
+    </div>
+
+    <div id="desc"></div>
+
+    <div class="plab">dangling bonds — all surfaces</div>
+    <div id="tw">
+      <table id="tt">
+        <thead><tr><th></th><th>(100)</th><th>(110)</th><th>(111)</th></tr></thead>
+        <tbody>
+          <tr><td class="rl">SC</td><td class="rv" id="t-SC-100">1</td><td class="rv" id="t-SC-110">2</td><td class="rv" id="t-SC-111">3</td></tr>
+          <tr><td class="rl">FCC</td><td class="rv" id="t-FCC-100">4</td><td class="rv" id="t-FCC-110">5</td><td class="rv" id="t-FCC-111">3</td></tr>
+          <tr><td class="rl">BCC</td><td class="rv" id="t-BCC-100">4</td><td class="rv" id="t-BCC-110">2</td><td class="rv" id="t-BCC-111">4</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<div id="leg">
+  <span class="li"><span class="ld" style="background:var(--Y)"></span>surface atom</span>
+  <span class="li"><span class="ld" style="background:var(--P)"></span>surface layer</span>
+  <span class="li"><span class="ld" style="background:#2A4A70"></span>bulk</span>
+  <span class="li"><span class="lb" style="background:var(--O)"></span>in-plane</span>
+  <span class="li"><span class="lb" style="background:var(--G)"></span>satisfied</span>
+  <span class="li"><span class="lb" style="background:var(--R)"></span>dangling</span>
+  <span class="li"><span style="display:inline-block;width:16px;height:10px;border:1.5px solid rgba(200,230,255,.7);border-radius:2px;flex-shrink:0"></span>unit cell</span>
+</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+'use strict';
+const SQ2=Math.SQRT2,SQ3=Math.sqrt(3),SQ6=Math.sqrt(6);
+
+// ── Crystal data ─────────────────────────────────────────────────────────────
+const CR={
+  SC:{label:'Simple Cubic',coord:6,
+    sites:(n,m,l)=>[[n,m,l]],
+    nn:[[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]]},
+  FCC:{label:'Face-Centered Cubic',coord:12,
+    sites:(n,m,l)=>[[n,m,l],[n+.5,m+.5,l],[n+.5,m,l+.5],[n,m+.5,l+.5]],
+    nn:[[.5,.5,0],[.5,-.5,0],[-.5,.5,0],[-.5,-.5,0],
+        [.5,0,.5],[.5,0,-.5],[-.5,0,.5],[-.5,0,-.5],
+        [0,.5,.5],[0,.5,-.5],[0,-.5,.5],[0,-.5,-.5]]},
+  BCC:{label:'Body-Centered Cubic',coord:8,
+    sites:(n,m,l)=>[[n,m,l],[n+.5,m+.5,l+.5]],
+    nn:[[.5,.5,.5],[.5,.5,-.5],[.5,-.5,.5],[-.5,.5,.5],
+        [-.5,-.5,.5],[-.5,.5,-.5],[.5,-.5,-.5],[-.5,-.5,-.5]]}
+};
+const SF={
+  '100':{label:'(100)',h:(x,y,z)=>x,disp:(x,y,z,S)=>new THREE.Vector3(S*y,S*x,S*z)},
+  '110':{label:'(110)',h:(x,y,z)=>x+y,disp:(x,y,z,S)=>new THREE.Vector3(S*(x-y)/SQ2,S*(x+y)/SQ2,S*z)},
+  '111':{label:'(111)',h:(x,y,z)=>x+y+z,disp:(x,y,z,S)=>new THREE.Vector3(S*(x-y)/SQ2,S*(x+y+z)/SQ3,S*(x+y-2*z)/SQ6)}
+};
+const LSEP={SC:{'100':1,'110':1,'111':1},FCC:{'100':.5,'110':1,'111':1},BCC:{'100':.5,'110':1,'111':.5}};
+const INFO={
+  SC:{'100':{d:1,ip:4,desc:'4 in-plane bonds lock the atom in the square surface lattice (see the orange bonds forming a cross). The unit cell\'s entire x-face sits in the surface plane. (6−4)÷2 = 1 dangling bond.'},
+      '110':{d:2,ip:2,desc:'2 in-plane bonds along the z-axis remain intact. The unit cell straddles the surface with two corners at Y=0. (6−2)÷2 = 2 dangling bonds.'},
+      '111':{d:3,ip:0,desc:'No nearest neighbor lies in the (111) plane — only one unit cell corner touches the surface. All 6 bonds split 3+3 across the diagonal cut. (6−0)÷2 = 3 dangling bonds.'}},
+  FCC:{'100':{d:4,ip:4,desc:'4 in-plane bonds form a square ring in the surface layer. The unit cell x-face shows 4 surface atoms at its corners. (12−4)÷2 = 4 dangling bonds.'},
+       '110':{d:5,ip:2,desc:'Only 2 in-plane bonds — the most open FCC surface. The diagonal (110) cut leaves 5 dangling bonds. (12−2)÷2 = 5. Missing-row reconstruction on Au, Pt.'},
+       '111':{d:3,ip:6,desc:'6 in-plane bonds form a hexagonal ring (orange). The triangular (111) cut is the densest FCC plane. (12−6)÷2 = 3 dangling bonds — lowest-energy FCC surface.'}},
+  BCC:{'100':{d:4,ip:0,desc:'No BCC nearest neighbor lies in the (100) plane. All 8 bonds split 4+4 across the square cut — the unit cell body center appears below the surface. (8−0)÷2 = 4 dangling bonds.'},
+       '110':{d:2,ip:4,desc:'4 in-plane bonds form a rectangle in the (110) plane (orange). The rectangular diagonal cut is BCC\'s densest plane. (8−4)÷2 = 2 dangling bonds. Most stable BCC surface — Fe, W, Mo.'},
+       '111':{d:4,ip:0,desc:'No BCC nearest neighbor lies in the (111) plane. The triangular cut leaves all 8 bonds split 4+4. (8−0)÷2 = 4 dangling bonds. Very open; often facets to (110) micro-steps.'}}
+};
+
+// Plane accent colors for preview: (100)→blue, (110)→orange, (111)→purple
+const PLANE_COLOR={'100':0x3A8FE0,'110':0xE08030,'111':0x9030E0};
+const PLANE_CSS={'100':'#3A8FE0','110':'#E08030','111':'#9030E0'};
+
+// ── MAIN Three.js ─────────────────────────────────────────────────────────────
+const canvas=document.getElementById('c'),wrap=document.getElementById('cw');
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setClearColor(0x0B2545,1);
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(38,1,.1,150);
+const CAM_ZR=15,CAM_YR=6.5,CAM_R=CAM_YR/CAM_ZR;
+let camDist=CAM_ZR;
+function updateCam(){camera.position.set(0,camDist*CAM_R,camDist);camera.lookAt(0,-1,0);}
+updateCam();
+scene.add(new THREE.AmbientLight(0xffffff,.5));
+const dl=new THREE.DirectionalLight(0xffffff,.7);dl.position.set(5,10,7);scene.add(dl);
+const dl2=new THREE.DirectionalLight(0x7AAFD4,.3);dl2.position.set(-4,-3,-5);scene.add(dl2);
+const S=2.2;
+
+// Surface plane indicator
+{const pg=new THREE.PlaneGeometry(S*6,S*6);
+ const pm=new THREE.Mesh(pg,new THREE.MeshBasicMaterial({color:0x2A5FAD,transparent:true,opacity:.09,side:THREE.DoubleSide}));
+ pm.rotation.x=-Math.PI/2;scene.add(pm);
+ const pe=new THREE.LineSegments(new THREE.EdgesGeometry(pg),new THREE.LineBasicMaterial({color:0x7AAFD4,transparent:true,opacity:.20}));
+ pe.rotation.x=-Math.PI/2;scene.add(pe);}
+
+const G=new THREE.Group();scene.add(G);
+
+// Shared materials (never disposed)
+const M={
+  ref:new THREE.MeshPhongMaterial({color:0xF0C040,shininess:90}),
+  srf:new THREE.MeshPhongMaterial({color:0xC8DFF2,shininess:55}),
+  b0:new THREE.MeshPhongMaterial({color:0x3A6090,shininess:35}),
+  b1:new THREE.MeshPhongMaterial({color:0x2A4A70,shininess:25}),
+  b2:new THREE.MeshPhongMaterial({color:0x18304A,shininess:15}),
+  db:new THREE.MeshPhongMaterial({color:0xE05050,shininess:50}),
+  de:new THREE.MeshPhongMaterial({color:0xE05050,transparent:true,opacity:.22}),
+  ip:new THREE.MeshPhongMaterial({color:0xE09030,shininess:50}),
+  sb:new THREE.MeshPhongMaterial({color:0x40B870,shininess:50}),
+  // cell material: no depth test so edges always render through atoms
+  cell:null // created per-call as LineBasicMaterial with depthTest:false
+};
+
+function sph(pos,r,mat){const o=new THREE.Mesh(new THREE.SphereGeometry(r,16,11),mat);o.position.copy(pos);G.add(o);}
+function cyl(p1,p2,r,mat){
+  const d=new THREE.Vector3().subVectors(p2,p1),l=d.length();
+  if(l<.01)return;
+  const o=new THREE.Mesh(new THREE.CylinderGeometry(r,r,l,8),mat);
+  o.position.copy(new THREE.Vector3().addVectors(p1,p2).multiplyScalar(.5));
+  o.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.clone().normalize());
+  G.add(o);
+}
+
+// ── Unit cell + surface plane for main scene ──────────────────────────────────
+const CELL_CORNERS=[[0,0,0],[1,0,0],[0,1,0],[0,0,1],
+                    [1,1,0],[1,0,1],[0,1,1],[1,1,1]];
+const CELL_EDGES=[[0,1],[0,2],[0,3],[1,4],[1,5],[2,4],[2,6],[3,5],[3,6],[4,7],[5,7],[6,7]];
+
+const CELL_PLANE_VERTS={
+  '100':[[0,0,0],[0,1,0],[0,1,1],[0,0,1]],
+  '110':[[1,0,0],[0,1,0],[0,1,1],[1,0,1]],
+  '111':[[1,0,0],[0,1,0],[0,0,1]]
+};
+
+function buildMainCellAndPlane(sk){
+  const sf=SF[sk],pc=PLANE_COLOR[sk];
+
+  const v=[];
+  for(const[a,b]of CELL_EDGES){
+    const p1=sf.disp(...CELL_CORNERS[a],S),p2=sf.disp(...CELL_CORNERS[b],S);
+    v.push(p1.x,p1.y,p1.z,p2.x,p2.y,p2.z);
+  }
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.Float32BufferAttribute(v,3));
+  const ls=new THREE.LineSegments(geo,new THREE.LineBasicMaterial({color:0xFFFFFF,depthTest:false,depthWrite:false}));
+  ls.renderOrder=999;G.add(ls);
+
+  const verts=CELL_PLANE_VERTS[sk];
+  const pts=verts.map(([x,y,z])=>sf.disp(x,y,z,S));
+  const n=pts.length;
+
+  const fpos=[];
+  if(n===3){
+    fpos.push(pts[0].x,pts[0].y,pts[0].z,pts[1].x,pts[1].y,pts[1].z,pts[2].x,pts[2].y,pts[2].z);
+  } else {
+    fpos.push(pts[0].x,pts[0].y,pts[0].z,pts[1].x,pts[1].y,pts[1].z,pts[2].x,pts[2].y,pts[2].z);
+    fpos.push(pts[0].x,pts[0].y,pts[0].z,pts[2].x,pts[2].y,pts[2].z,pts[3].x,pts[3].y,pts[3].z);
+  }
+  const fg=new THREE.BufferGeometry();
+  fg.setAttribute('position',new THREE.Float32BufferAttribute(fpos,3));
+  const fm=new THREE.Mesh(fg,new THREE.MeshBasicMaterial({color:pc,transparent:true,opacity:0.28,side:THREE.DoubleSide,depthWrite:false}));
+  fm.renderOrder=100;G.add(fm);
+
+  const ev=[];
+  for(let i=0;i<n;i++){const j=(i+1)%n;ev.push(pts[i].x,pts[i].y,pts[i].z,pts[j].x,pts[j].y,pts[j].z);}
+  const eg=new THREE.BufferGeometry();
+  eg.setAttribute('position',new THREE.Float32BufferAttribute(ev,3));
+  const el=new THREE.LineSegments(eg,new THREE.LineBasicMaterial({color:pc,depthTest:false,depthWrite:false}));
+  el.renderOrder=998;G.add(el);
+}
+
+// ── Build main scene ──────────────────────────────────────────────────────────
+function build(ck,sk){
+  G.traverse(c=>{if(c.geometry)c.geometry.dispose();});G.clear();
+  const cr=CR[ck],sf=SF[sk],lsep=LSEP[ck][sk];
+  const RNG=4,MXR2=(S*2.35)*(S*2.35),MXD=S*5;
+  const seen=new Set(),atoms=[];
+
+  for(let n=-RNG;n<=RNG;n++)for(let m=-RNG;m<=RNG;m++)for(let l=-RNG;l<=RNG;l++){
+    for(const[x,y,z]of cr.sites(n,m,l)){
+      const key=`${Math.round(x*200)}_${Math.round(y*200)}_${Math.round(z*200)}`;
+      if(seen.has(key))continue;seen.add(key);
+      const h=sf.h(x,y,z);if(h>0.02)continue;
+      const p=sf.disp(x,y,z,S);
+      if(p.x*p.x+p.z*p.z>MXR2)continue;if(p.y<-MXD)continue;
+      const depth=(h<-0.02)?Math.min(3,Math.round(Math.abs(h)/lsep)):0;
+      const isRef=Math.abs(x)<.01&&Math.abs(y)<.01&&Math.abs(z)<.01;
+      atoms.push({p,depth,isRef});
+    }
+  }
+  atoms.sort((a,b)=>a.p.y-b.p.y);
+
+  for(const{p,depth,isRef}of atoms){
+    if(isRef)continue;
+    const[m,r]=([[M.srf,S*.115],[M.b0,S*.095],[M.b1,S*.078],[M.b2,S*.060]])[depth]||[M.b2,S*.060];
+    sph(p,r,m);
+  }
+
+  const P0=new THREE.Vector3(0,0,0),REFR=S*.17;
+  for(const[dx,dy,dz]of cr.nn){
+    const h=sf.h(dx,dy,dz),ep=sf.disp(dx,dy,dz,S);
+    const dir=new THREE.Vector3().subVectors(ep,P0).normalize();
+    const bs=P0.clone().addScaledVector(dir,REFR);
+    if(h>0.02){cyl(bs,ep,S*.038,M.db);sph(ep,S*.062,M.de);}
+    else if(Math.abs(h)<=0.02){cyl(bs,ep.clone().addScaledVector(dir,-S*.115),S*.044,M.ip);}
+    else{cyl(bs,ep.clone().addScaledVector(dir,-S*.095),S*.038,M.sb);}
+  }
+  sph(P0,REFR,M.ref);
+
+  buildMainCellAndPlane(sk);
+}
+
+// ── PREVIEW Three.js ──────────────────────────────────────────────────────────
+const pvCanvas=document.getElementById('pvC');
+const pvRenderer=new THREE.WebGLRenderer({canvas:pvCanvas,antialias:true,alpha:false});
+pvRenderer.setPixelRatio(Math.min(devicePixelRatio,2));
+pvRenderer.setClearColor(0x07182D,1);
+pvRenderer.setSize(162,162);
+const pvScene=new THREE.Scene();
+const pvCam=new THREE.PerspectiveCamera(38,1,.1,20);
+pvCam.position.set(2.0,1.35,2.1);pvCam.lookAt(0,0,0);
+pvScene.add(new THREE.AmbientLight(0xffffff,.55));
+const pvDl=new THREE.DirectionalLight(0xffffff,.55);pvDl.position.set(2,3,2);pvScene.add(pvDl);
+const pvDl2=new THREE.DirectionalLight(0x7AAFD4,.25);pvDl2.position.set(-2,-1,-2);pvScene.add(pvDl2);
+const pvG=new THREE.Group();pvScene.add(pvG);
+
+// Preview helpers — add to pvG
+function pvSph(pos,r,color){
+  const o=new THREE.Mesh(new THREE.SphereGeometry(r,14,10),new THREE.MeshPhongMaterial({color,shininess:70}));
+  o.position.set(...pos);pvG.add(o);
+}
+function pvCyl(p1,p2,r,color){
+  const d=new THREE.Vector3(...p2).sub(new THREE.Vector3(...p1)),l=d.length();
+  if(l<.001)return;
+  const o=new THREE.Mesh(new THREE.CylinderGeometry(r,r,l,7),new THREE.MeshBasicMaterial({color}));
+  o.position.copy(new THREE.Vector3(...p1).add(new THREE.Vector3(...p2)).multiplyScalar(.5));
+  o.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize());pvG.add(o);
+}
+function pvLine(v){
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(v,3));
+  return new THREE.LineSegments(g,new THREE.LineBasicMaterial({color:0xFFFFFF,transparent:true,opacity:.85}));
+}
+
+// Preview unit cell corners (centered, cube -.5 to .5)
+const PVC8=[[-0.5,-0.5,-0.5],[0.5,-0.5,-0.5],[-0.5,0.5,-0.5],[-0.5,-0.5,0.5],
+            [0.5,0.5,-0.5],[0.5,-0.5,0.5],[-0.5,0.5,0.5],[0.5,0.5,0.5]];
+const PVE=[[0,1],[0,2],[0,3],[1,4],[1,5],[2,4],[2,6],[3,5],[3,6],[4,7],[5,7],[6,7]];
+
+function buildPreview(ck,sk){
+  pvG.traverse(c=>{if(c.geometry)c.geometry.dispose();});pvG.clear();
+
+  const pc=PLANE_COLOR[sk];
+
+  for(const[a,b]of PVE) pvCyl(PVC8[a],PVC8[b],0.016,0xC0D8F0);
+
+  function pvOnPlane(cx,cy,cz){
+    if(sk==='100') return Math.abs(cx+.5)<.01;
+    if(sk==='110') return Math.abs(cx+cy)<.01;
+    return Math.abs(cx+cy+cz+.5)<.01;
+  }
+
+  for(const[cx,cy,cz]of PVC8){
+    const isRef=Math.abs(cx+.5)<.01&&Math.abs(cy+.5)<.01&&Math.abs(cz+.5)<.01;
+    const onPlane=pvOnPlane(cx,cy,cz);
+    const color=isRef?0xF0C040:onPlane?0xFFD060:0x3A6090;
+    const r=isRef ? 0.115 : onPlane ? 0.095 : 0.078;
+    pvSph([cx,cy,cz],r,color);
+  }
+
+  if(ck==='FCC'){
+    const fc=[[0,0,-.5],[0,0,.5],[0,-.5,0],[0,.5,0],[-.5,0,0],[.5,0,0]];
+    for(const[cx,cy,cz]of fc)
+      pvSph([cx,cy,cz],.072,pvOnPlane(cx,cy,cz)?0xFFD060:0x3A7090);
+  }
+  if(ck==='BCC')
+    pvSph([0,0,0],.082,pvOnPlane(0,0,0)?0xFFD060:0x3A7090);
+
+  let planeV;
+  if(sk==='100'){
+    planeV=[[-.5,-.5,-.5],[-.5,.5,-.5],[-.5,.5,.5],[-.5,-.5,.5]];
+  } else if(sk==='110'){
+    planeV=[[-.5,.5,-.5],[.5,-.5,-.5],[.5,-.5,.5],[-.5,.5,.5]];
+  } else {
+    planeV=[[.5,-.5,-.5],[-.5,.5,-.5],[-.5,-.5,.5]];
+  }
+
+  const fpos=[];
+  if(planeV.length===3){
+    fpos.push(...planeV[0],...planeV[1],...planeV[2]);
+  } else {
+    fpos.push(...planeV[0],...planeV[1],...planeV[2]);
+    fpos.push(...planeV[0],...planeV[2],...planeV[3]);
+  }
+  const fg=new THREE.BufferGeometry();
+  fg.setAttribute('position',new THREE.Float32BufferAttribute(fpos,3));
+  pvG.add(new THREE.Mesh(fg,new THREE.MeshBasicMaterial({color:pc,transparent:true,opacity:.42,side:THREE.DoubleSide,depthWrite:false})));
+
+  const n=planeV.length,ev=[];
+  for(let i=0;i<n;i++){const j=(i+1)%n;ev.push(...planeV[i],...planeV[j]);}
+  const eg=new THREE.BufferGeometry();
+  eg.setAttribute('position',new THREE.Float32BufferAttribute(ev,3));
+  const brd=new THREE.LineSegments(eg,new THREE.LineBasicMaterial({color:pc,depthTest:false,depthWrite:false}));
+  brd.renderOrder=50;pvG.add(brd);
+}
+
+// ── UI update ─────────────────────────────────────────────────────────────────
+function ui(ck,sk){
+  const cr=CR[ck],sf=SF[sk],info=INFO[ck][sk];
+  document.getElementById('pn').textContent=cr.label;
+  document.getElementById('ps').textContent=sf.label;
+  document.getElementById('f-cn').textContent=cr.coord;
+  document.getElementById('f-ip').textContent=info.ip;
+  document.getElementById('f-d').textContent=info.d;
+  document.getElementById('b-ip').textContent=info.ip;
+  document.getElementById('b-sb').textContent=info.d;
+  document.getElementById('b-d').textContent=info.d;
+  document.getElementById('desc').textContent=info.desc;
+  document.querySelectorAll('#tt .rv').forEach(td=>td.classList.remove('hi'));
+  const cell=document.getElementById(`t-${ck}-${sk}`);if(cell)cell.classList.add('hi');
+  document.getElementById('pvCrystal').textContent=ck;
+  document.getElementById('pvPlane').textContent=sf.label;
+  document.getElementById('pvPlane').style.color=PLANE_CSS[sk];
+}
+
+// ── Controls ──────────────────────────────────────────────────────────────────
+let ck='SC',sk='100';
+function go(nc,ns){
+  ck=nc;sk=ns;
+  build(ck,sk);buildPreview(ck,sk);ui(ck,sk);
+  document.querySelectorAll('#cbg .btn').forEach(b=>b.classList.toggle('on',b.dataset.c===ck));
+  document.querySelectorAll('#sbg .btn').forEach(b=>b.classList.toggle('on',b.dataset.s===sk));
+}
+document.querySelectorAll('#cbg .btn').forEach(b=>b.addEventListener('click',()=>go(b.dataset.c,sk)));
+document.querySelectorAll('#sbg .btn').forEach(b=>b.addEventListener('click',()=>go(ck,b.dataset.s)));
+
+// ── Rotation + Zoom ───────────────────────────────────────────────────────────
+let ry=0.45,rx=0.3,dr=false,lx=0,ly=0,ar=true,pinch0=0;
+const oD=(x,y)=>{dr=true;ar=false;lx=x;ly=y};
+const oM=(x,y)=>{if(!dr)return;ry+=(x-lx)*.013;rx=Math.max(-.9,Math.min(.9,rx+(y-ly)*.013));lx=x;ly=y};
+const oU=()=>dr=false;
+canvas.addEventListener('mousedown',e=>oD(e.clientX,e.clientY));
+canvas.addEventListener('mousemove',e=>oM(e.clientX,e.clientY));
+canvas.addEventListener('mouseup',oU);canvas.addEventListener('mouseleave',oU);
+canvas.addEventListener('wheel',e=>{e.preventDefault();camDist*=e.deltaY>0?1.10:.91;camDist=Math.max(4,Math.min(45,camDist));updateCam();},{passive:false});
+canvas.addEventListener('touchstart',e=>{
+  if(e.touches.length===1)oD(e.touches[0].clientX,e.touches[0].clientY);
+  else if(e.touches.length===2){dr=false;pinch0=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);}
+  e.preventDefault();},{passive:false});
+canvas.addEventListener('touchmove',e=>{
+  if(e.touches.length===1)oM(e.touches[0].clientX,e.touches[0].clientY);
+  else if(e.touches.length===2&&pinch0>0){const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);camDist*=pinch0/d;camDist=Math.max(4,Math.min(45,camDist));updateCam();pinch0=d;}
+  e.preventDefault();},{passive:false});
+canvas.addEventListener('touchend',e=>{oU();if(e.touches.length<2)pinch0=0;});
+
+// ── Resize ────────────────────────────────────────────────────────────────────
+function resize(){const w=wrap.clientWidth||600,h=wrap.clientHeight||400;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}
+window.addEventListener('resize',resize);
+if(window.ResizeObserver)new ResizeObserver(resize).observe(wrap);
+
+// ── Render loop ───────────────────────────────────────────────────────────────
+let pvRy=0.3;
+(function loop(){
+  requestAnimationFrame(loop);
+  if(ar)ry+=.004;
+  G.rotation.y=ry;G.rotation.x=rx;
+  renderer.render(scene,camera);
+  pvRy+=.006;pvG.rotation.y=pvRy;
+  pvRenderer.render(pvScene,pvCam);
+})();
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+resize();
+go('SC','100');
+</script>
+</body>
+</html>
